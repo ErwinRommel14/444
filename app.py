@@ -2,15 +2,25 @@
 import sys
 import subprocess
 import importlib.util
+import streamlit as st
 
-# Проверяем наличие необходимных библиотек и устанавливаем их при необходимости
+# Проверяем наличие необходимых библиотек и устанавливаем их при необходимости
 def install_packages():
     required_packages = ['streamlit', 'numpy', 'pandas', 'scikit-learn', 'matplotlib', 'seaborn']
     for package in required_packages:
         if importlib.util.find_spec(package) is None:
-            st.info(f'Установка пакета: {package}...')
+            # Проверяем, запущено ли приложение в Streamlit
+            if 'streamlit' in sys.modules:
+                st.info(f'Установка пакета: {package}...')
+            else:
+                print(f'Установка пакета: {package}...')
+            
             subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-            st.success(f"Пакет {package} успешно установлен!")
+            
+            if 'streamlit' in sys.modules:
+                st.success(f"Пакет {package} успешно установлен!")
+            else:
+                print(f"Пакет {package} успешно установлен!")
 
 # Вызываем установку пакетов
 install_packages()
@@ -18,7 +28,6 @@ install_packages()
 # Теперь импортируем после установки
 import numpy as np
 import pandas as pd
-import streamlit as st
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import MinMaxScaler
 from sklearn.neighbors import KNeighborsClassifier
