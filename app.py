@@ -1,4 +1,21 @@
 # -*- coding: utf-8 -*-
+import sys
+import subprocess
+import importlib.util
+
+# Проверяем наличие необходимных библиотек и устанавливаем их при необходимости
+def install_packages():
+    required_packages = ['streamlit', 'numpy', 'pandas', 'scikit-learn', 'matplotlib', 'seaborn']
+    for package in required_packages:
+        if importlib.util.find_spec(package) is None:
+            st.info(f'Установка пакета: {package}...')
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+            st.success(f"Пакет {package} успешно установлен!")
+
+# Вызываем установку пакетов
+install_packages()
+
+# Теперь импортируем после установки
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -11,46 +28,6 @@ from sklearn.inspection import permutation_importance
 import matplotlib.pyplot as plt
 import seaborn as sns
 import time
-
-# Заголовок страницы
-st.set_page_config(
-    page_title="BotDetector PRO",
-    page_icon="🤖",
-    layout="centered",
-    initial_sidebar_state="expanded"
-)
-
-# Стилизация
-st.markdown("""
-<style>
-    .header-style {
-        font-size: 24px;
-        font-weight: bold;
-        color: #8e44ad;
-    }
-    .metric-value {
-        font-size: 28px !important;
-        font-weight: bold !important;
-    }
-    .bot-indicator {
-        transition: all 0.5s ease;
-    }
-    .pulse-animation {
-        animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.05); }
-        100% { transform: scale(1); }
-    }
-    .feature-importance {
-        background-color: #f8f9fa;
-        border-radius: 10px;
-        padding: 15px;
-        margin-top: 20px;
-    }
-</style>
-""", unsafe_allow_html=True)
 
 # Кэширование модели
 @st.cache_data
@@ -99,7 +76,7 @@ def train_model():
     result = permutation_importance(pipeline, X_test, y_test, n_repeats=5, random_state=42)
     feature_weights = result.importances_mean
 
-    return pipeline, X.columns, accuracy, report, feature_weights, X_test, y_test
+    return pipeline, X.columns, accuracy, report, feature_weights
 
 # Функция для предсказания
 def predict_bot(pipeline, features, input_values):
@@ -116,7 +93,7 @@ def main():
         result = train_model()
         if result is None:
             return
-        pipeline, features, accuracy, report, feature_weights, X_test, y_test = result
+        pipeline, features, accuracy, report, feature_weights = result
 
     # Форма ввода параметров
     with st.form("bot_form"):
@@ -195,19 +172,6 @@ def main():
     with st.sidebar:
         st.header("ℹ️ О системе")
         st.info("BotDetector PRO использует KNN-алгоритм для анализа аккаунтов в соцсетях на признаки ботов.")
-
-        st.markdown("---")
-        st.write("📊 **Метрики модели:**")
-        st.metric("Точность", f"{accuracy:.2%}")
-        if '1' in report:
-            st.metric("Precision (бота)", f"{report['1']['precision']:.2%}")
-            st.metric("Recall (бота)", f"{report['1']['recall']:.2%}")
-
-        st.markdown("---")
-        st.write("**📌 Как использовать:**")
-        st.write("1. Введите параметры аккаунта")
-        st.write("2. Наблюдайте за изменением вероятности в реальном времени")
-        st.write("3. Нажмите 'Проверить аккаунт' для фиксации результата")
 
 if __name__ == "__main__":
     main()
